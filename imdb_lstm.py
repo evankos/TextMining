@@ -1,79 +1,60 @@
-'''Train a recurrent convolutional network on the IMDB sentiment
-classification task.
-Gets to 0.8498 test accuracy after 2 epochs. 41s/epoch on K520 GPU.
+'''Trains a LSTM on the IMDB sentiment classification task.
+The dataset is actually too small for LSTM to be of any advantage
+compared to simpler, much faster methods such as TF-IDF + LogReg.
+Notes:
+- RNNs are tricky. Choice of batch size is important,
+choice of loss and optimizer is critical, etc.
+Some configurations won't converge.
+- LSTM loss decrease patterns during training can be quite different
+from what you see with CNNs/MLPs/etc.
 '''
 from __future__ import print_function
 import numpy as np
+
+
 np.random.seed(1337)  # for reproducibility
 
-from keras.preprocessing import sequence
-from keras.models import Model
-from keras.layers import Dense, Dropout, Activation, Input
-from keras.layers import Embedding
-from keras.layers import LSTM
-from keras.layers import Convolution1D, MaxPooling1D
-from keras.datasets import imdb
+
+from corpus.embedding import Generator
+from sklearn import metrics
+from corpus.networks import rnn, cnn, cnn_rnn
 
 
-# Embedding
-max_features = 20000
-maxlen = 100
-embedding_size = 128
-
-# Convolution
-filter_length = 5
-nb_filter = 64
-pool_length = 4
-
-# LSTM
-lstm_output_size = 70
-
-# Training
-batch_size = 30
-nb_epoch = 2
-
-'''
-Note:
-batch_size is highly sensitive.
-Only 2 epochs are needed as the dataset is very small.
-'''
 
 print('Loading data...')
-(X_train, y_train), (X_test, y_test) = imdb.load_data(nb_words=max_features)
-print(len(X_train), 'train sequences')
-print(len(X_test), 'test sequences')
 
-print('Pad sequences (samples x time)')
-X_train = sequence.pad_sequences(X_train, maxlen=maxlen)
-X_test = sequence.pad_sequences(X_test, maxlen=maxlen)
-print('X_train shape:', X_train.shape)
-print('X_test shape:', X_test.shape)
+
+gen_train = Generator(multiprocessing=10,categorical=True,local=False)
+gen_train.yeld_size=100
+gen_train.calculate_embedding()
+
+
+gen_test = Generator(multiprocessing=10,yeld_corpus="test",categorical=True,local=False)
+gen_test.yeld_size=100
+
+model_choice='rnn'
+
+
 
 print('Build model...')
-net = {}
-print(X_train.shape)
-net['input'] = Input((100,None))
-net['embedding'] = Embedding(max_features, embedding_size)(net['input'])
-net['dropout'] = Dropout(0.25)(net['embedding'])
-net['convolution1D'] = Convolution1D(nb_filter=nb_filter,
-                        filter_length=filter_length,
-                        border_mode='valid',
-                        activation='relu',
-                        subsample_length=1)(net['dropout'])
-net['maxPooling1D'] = MaxPooling1D(pool_length=pool_length)(net['convolution1D'])
-net['lstm'] = LSTM(lstm_output_size)(net['maxPooling1D'])
-net['dense'] = Dense(1)(net['lstm'])
-net['activation'] = Activation('sigmoid')(net['dense'])
+models= {'cnn':cnn,'cnn-rnn':cnn_rnn,'rnn':rnn}
+model=models[model_choice](512, len(gen_train.imdb_vocab)-1,gen_train.maxlen,embedding_matrix=gen_train.embedding_matrix,embedding_trainable=False,lstm_dropout=0.1)
 
-model = Model(net['input'], net['activation'])
-
-model.compile(loss='binary_crossentropy',
-              optimizer='adam',
-              metrics=['accuracy'])
-
+model.summary()
 print('Train...')
-model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=nb_epoch,
-          validation_data=(X_test, y_test))
-score, acc = model.evaluate(X_test, y_test, batch_size=batch_size)
-print('Test score:', score)
-print('Test accuracy:', acc)
+# model.fit_generator(gen_train,samples_per_epoch=25000,nb_epoch=10)
+
+
+model.fit(gen_train.x_train, gen_train.train_y, batch_size=128, nb_epoch=25,
+          validation_data=(gen_test.x_test, gen_test.test_y))
+
+y_output = model.predict(gen_test.x_test, 128)
+y_output[np.where(y_output<0.5)]=0
+y_output[np.where(y_output>=0.5)]=1
+
+accuracy = metrics.accuracy_score(gen_test.test_y, y_output)
+precision = metrics.precision_score(gen_test.test_y, y_output)
+recall = metrics.recall_score(gen_test.test_y, y_output)
+f1 = metrics.f1_score(gen_test.test_y, y_output)
+
+print("Accuracy: %f\nPrecission: %f\nRecall: %f\nF1: %f" % (accuracy,precision,recall,f1))

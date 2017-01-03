@@ -22,7 +22,6 @@ imdb_vocab = open("aclimdb/imdb.vocab", encoding="utf8").read().split("\n")
 #Get stop word indexes
 stop_indices=[i for i,word in enumerate(imdb_vocab) if word in stops]
 
-
 X_train, y_train = get_data_feat("aclimdb/train/labeledBow.feat")
 X_test, y_test = get_data_feat("aclimdb/train/labeledBow.feat")
 
@@ -99,12 +98,4 @@ f1 = metrics.f1_score(y_test, y_output)
 print("Accuracy: %f\nPrecission: %f\nRecall: %f\nF1: %f" % (accuracy,precision,recall,f1))
 
 
-
-# indeces = np.zeros((25000,672))
-# max=0
-# for i,a in enumerate(X):
-#     indeces[i,:a.indices.shape[0]]=a.indices
-# x = x.toarray
-# np.savez('data.npz',indeces,)
-# print(max)
 

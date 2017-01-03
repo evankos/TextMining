@@ -1,11 +1,14 @@
 from gensim.models import Word2Vec
-from .common import memory
+from .common import set_memory,project_root
 from sklearn.datasets import load_svmlight_file
 import numpy as np
+from sklearn.externals.joblib import Memory
 from numpy.linalg import norm
 
 
-mem = memory()
+mem = Memory("%s/memcache" % project_root())
+set_memory(mem)
+
 
 def embedding(glove_path):
     model = Word2Vec.load_word2vec_format(glove_path, binary=False)
