@@ -13,7 +13,6 @@ def rnn(width,embedding_size,maxlen,embedding_dropout=0.2, embedding_matrix=None
     else:
         model.add(Embedding(embedding_size, embedding_dims,
                             dropout=embedding_dropout,trainable=embedding_trainable,weights=[embedding_matrix]))
-    model.add(LSTM(width, dropout_W=lstm_dropout, dropout_U=lstm_dropout, return_sequences=True))
     model.add(LSTM(width, dropout_W=lstm_dropout, dropout_U=lstm_dropout, return_sequences=False))
     model.add(Dense(1))
     model.add(Activation('sigmoid'))

@@ -38,9 +38,10 @@ model_choice='rnn'
 
 print('Build model...')
 models= {'cnn':cnn,'cnn-rnn':cnn_rnn,'rnn':rnn}
-model=models[model_choice](512, len(gen_train.imdb_vocab)-1,gen_train.maxlen,embedding_matrix=gen_train.embedding_matrix,embedding_trainable=False,lstm_dropout=0.1)
+model=models[model_choice](256, len(gen_train.imdb_vocab)-1,gen_train.maxlen,embedding_matrix=gen_train.embedding_matrix,embedding_trainable=False,lstm_dropout=0.1)
 
 model.summary()
+exit()
 print('Train...')
 # model.fit_generator(gen_train,samples_per_epoch=25000,nb_epoch=10)
 
