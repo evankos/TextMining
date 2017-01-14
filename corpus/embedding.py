@@ -204,21 +204,21 @@ class Generator():
                 X_train_=np.zeros((self._yeld_size,self._maxlen,max_features))
                 for j in range(int(25000/self._yeld_size)):
                     for i in range(self._yeld_size):
-                        X_train_[(self._yeld_size*j)+i,:,:] = np_utils.to_categorical(self._x_train[(self._yeld_size * j) + i, :], nb_classes=max_features)
-                        yield X_train_, self._train_y[self._yeld_size * j:self._yeld_size * (j + 1)]
+                        X_train_[i,:,:] = np_utils.to_categorical(self._x_train[(self._yeld_size * j) + i, :], nb_classes=max_features)
+                    yield (X_train_, self._train_y[self._yeld_size * j:self._yeld_size * (j + 1)])
             else:
                 X_test_=np.zeros((self._yeld_size,self._maxlen,max_features))
                 for j in range(int(25000/self._yeld_size)):
                     for i in range(self._yeld_size):
-                        X_test_[(self._yeld_size*j)+i,:,:] = np_utils.to_categorical(self._x_test[(self._yeld_size * j) + i, :], nb_classes=max_features)
-                        yield X_test_, self._test_y[self._yeld_size * j:self._yeld_size * (j + 1)]
+                        X_test_[i,:,:] = np_utils.to_categorical(self._x_test[(self._yeld_size * j) + i, :], nb_classes=max_features)
+                    yield (X_test_, self._test_y[self._yeld_size * j:self._yeld_size * (j + 1)])
         else:
             if self._yeld_corpus=="train":
                 for j in range(int(25000/self._yeld_size)):
-                    yield self._x_train[self._yeld_size * j:self._yeld_size * (j + 1), :], self._train_y[self._yeld_size * j:self._yeld_size * (j + 1)]
+                    yield (self._x_train[self._yeld_size * j:self._yeld_size * (j + 1), :], self._train_y[self._yeld_size * j:self._yeld_size * (j + 1)])
             else:
                 for j in range(int(25000/self._yeld_size)):
-                    yield self._x_test[self._yeld_size * j:self._yeld_size * (j + 1), :], self._test_y[self._yeld_size * j:self._yeld_size * (j + 1)]
+                    yield (self._x_test[self._yeld_size * j:self._yeld_size * (j + 1), :], self._test_y[self._yeld_size * j:self._yeld_size * (j + 1)])
 
 
 
